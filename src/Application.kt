@@ -1,5 +1,8 @@
 package com.spothero.lab
 
+import ch.qos.logback.core.util.ContentTypeUtil
+import com.spothero.lab.parkonect.api.OnDemandEntryRequest
+import com.spothero.lab.parkonect.api.XmlConverter
 import freemarker.cache.ClassTemplateLoader
 import io.ktor.application.Application
 import io.ktor.application.call
@@ -50,12 +53,12 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 
-    install(ContentNegotiation) {
-        gson {
-        }
-    }
 
     routing {
+        install(ContentNegotiation) {
+            gson {
+            }
+        }
         get("/") {
             call.respondText("HELLO WORLD! SpotNow!", contentType = ContentType.Text.Plain)
         }
