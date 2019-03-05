@@ -8,21 +8,14 @@ class OnDemandExitResponse {
     @field:JacksonXmlProperty(localName = "Success")
     var success: Boolean
     @field:JacksonXmlProperty(localName = "TransactionID")
-    var trasnactionId: Long?
+    var trasnactionId: String?
     @field:JacksonXmlProperty(localName = "Message")
     var message: String?
 
     @JvmOverloads
-    constructor(success: Boolean = true, transId: Long = 0) {
+    constructor(success: Boolean = true, transId: String? = null, message: String? = null) {
         this.success = success
         this.trasnactionId = transId
-        this.message = null
-    }
-
-    constructor(message: String) {
-        this.success = false
-        this.trasnactionId = null
         this.message = message
     }
-
 }

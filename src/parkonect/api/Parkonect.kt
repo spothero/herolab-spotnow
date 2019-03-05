@@ -1,5 +1,6 @@
 package com.spothero.lab.parkonect.api
 
+import com.spothero.lab.parkonect.api.database.OnDemandDatabase
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.log
@@ -15,7 +16,6 @@ import parkonect.api.model.OnDemandEntryRequest
 import parkonect.api.model.OnDemandEntryResponse
 import parkonect.api.model.OnDemandExitRequest
 import parkonect.api.model.OnDemandExitResponse
-import java.util.*
 
 
 @Suppress("unused") // Referenced in application.conf
@@ -33,14 +33,20 @@ fun Application.module(testing: Boolean = false) {
                     log.info(call.request.headers.toString())
                     var entryRequest = call.receive<OnDemandEntryRequest>()
                     log.info("Received $entryRequest")
+                    var errorMessage = OnDemandDatabase().recordEntry(entryRequest)
 
-                    val respBody = OnDemandEntryResponse(true)
+                    val respBody = OnDemandEntryResponse(errorMessage)
                     call.respond(respBody)
                 }
                 post("exit") {
                     val reqBody = call.receive<OnDemandExitRequest>()
                     log.info("Parsed body: $reqBody")
-                    val respBody = OnDemandExitResponse(true, Random().nextLong())
+                    var respPair = OnDemandDatabase().recordExit(reqBody)
+                    var respBody = if (respPair.second == null) {
+                        OnDemandExitResponse(true, respPair.first)
+                    } else {
+                        OnDemandExitResponse(false, null, respPair.second)
+                    }
                     call.respond(respBody)
                 }
             }

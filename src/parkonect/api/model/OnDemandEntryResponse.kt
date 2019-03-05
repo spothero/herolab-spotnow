@@ -16,8 +16,8 @@ class OnDemandEntryResponse {
         this.message = message
     }
 
-    constructor(message: String) {
-        this.success = false
+    constructor(message: String?) {
+        this.success = message == null
         this.message = message
     }
 }
