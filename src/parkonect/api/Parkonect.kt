@@ -1,22 +1,18 @@
 package com.spothero.lab.parkonect.api
 
-import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.annotation.JsonNaming
-import com.fasterxml.jackson.databind.deser.std.DateDeserializers
-import com.fasterxml.jackson.databind.ser.std.DateSerializer
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser
-import io.ktor.application.*
+import io.ktor.application.Application
+import io.ktor.application.ApplicationCall
+import io.ktor.application.call
+import io.ktor.application.log
 import io.ktor.auth.authenticate
 import io.ktor.features.ContentConverter
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.conversionService
 import io.ktor.features.suitableCharset
-import io.ktor.gson.gson
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.TextContent
@@ -24,10 +20,8 @@ import io.ktor.http.withCharset
 import io.ktor.request.ApplicationReceiveRequest
 import io.ktor.request.receive
 import io.ktor.request.receiveText
-import io.ktor.response.defaultTextContentType
 import io.ktor.response.respond
 import io.ktor.response.respondText
-import io.ktor.response.respondTextWriter
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
@@ -36,10 +30,7 @@ import io.ktor.util.pipeline.PipelineContext
 import kotlinx.coroutines.io.ByteReadChannel
 import kotlinx.coroutines.io.readRemaining
 import mu.KotlinLogging
-import java.text.SimpleDateFormat
 import java.util.*
-import javax.xml.bind.annotation.XmlElement
-import javax.xml.bind.annotation.XmlRootElement
 
 
 @Suppress("unused") // Referenced in application.conf
@@ -56,7 +47,7 @@ fun Application.module(testing: Boolean = false) {
                 post("entry") {
                     var bodyText = call.receiveText()
                     bodyText = if (bodyText.lines()[0].startsWith("<?xml version")) {
-                        val lst=bodyText.lines().toMutableList()
+                        val lst = bodyText.lines().toMutableList()
                         lst.removeAt(0)
                         lst.joinToString("\n")
                     } else {
@@ -83,76 +74,108 @@ fun Application.module(testing: Boolean = false) {
 }
 
 @JacksonXmlRootElement(localName = "Entry")
-data class OnDemandEntryRequest(
-    @JacksonXmlProperty(localName = "GarageID")
-    val garageId: Int,
-    @JacksonXmlProperty(localName = "Barcode")
-    val barcode: String,
-    @JacksonXmlProperty(localName = "LaneID")
-    val laneId: Int,
-    @JacksonXmlProperty(localName = "ActualEntryTime")
-    val entryTime: Date
-)
+class OnDemandEntryRequest {
+    @field:JacksonXmlProperty(localName = "GarageID")
+    var garageId: Int
+    @field:JacksonXmlProperty(localName = "Barcode")
+    var barcode: String
+    @field:JacksonXmlProperty(localName = "LaneID")
+    var laneId: Int
+    @field:JacksonXmlProperty(localName = "ActualEntryTime")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = XmlConverter.DATE_FORMAT_PATTERN, timezone = "UTC")
+    var entryTime: Date = Date()
+
+    @JvmOverloads
+    constructor(garageId: Int = 0, barcode: String = "", laneId: Int = 0, entryTime: Date = Date()) {
+        this.garageId = garageId
+        this.barcode = barcode
+        this.laneId = laneId
+        this.entryTime = entryTime
+    }
+
+}
 
 @JacksonXmlRootElement(localName = "Result")
-data class OnDemandEntryResponse(
-    @JacksonXmlProperty(localName = "Success")
-    val success: Boolean,
-    @JacksonXmlProperty(localName = "Message")
-    val message: String? = null
-)
+class OnDemandEntryResponse {
+    @field:JacksonXmlProperty(localName = "Success")
+    var success: Boolean
+    @field:JacksonXmlProperty(localName = "Message")
+    var message: String? = null
+
+    @JvmOverloads
+    constructor(success: Boolean = true, message: String? = null) {
+        this.success = success
+        this.message = message
+    }
+
+    constructor(message: String) {
+        this.success = false
+        this.message = message
+    }
+}
+
 
 @JacksonXmlRootElement(localName = "Exit")
-data class OnDemandExitRequest(
-    @JacksonXmlProperty(localName = "GarageID")
-    val garageId: Int,
-    @JacksonXmlProperty(localName = "Barcode")
-    val barcode: String,
-    @JacksonXmlProperty(localName = "LaneID")
-    val laneId: Int,
-    @JacksonXmlProperty(localName = "Amount")
-    val amount: Float,
-    @JacksonXmlProperty(localName = "ActualExitTime")
-    val entryTime: Date
-)
+class OnDemandExitRequest {
+    @field:JacksonXmlProperty(localName = "GarageID")
+    var garageId: Int
+    @field:JacksonXmlProperty(localName = "Barcode")
+    var barcode: String
+    @field:JacksonXmlProperty(localName = "LaneID")
+    var laneId: Int
+    @field:JacksonXmlProperty(localName = "Amount")
+    var amount: Float
+    @field:JacksonXmlProperty(localName = "ActualExitTime")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = XmlConverter.DATE_FORMAT_PATTERN, timezone = "UTC")
+    var entryTime: Date
+
+    @JvmOverloads
+    constructor(
+        garageId: Int = 0,
+        barcode: String = "",
+        laneId: Int = 0,
+        amount: Float = 0f,
+        entryTime: Date = Date()
+    ) {
+        this.garageId = garageId
+        this.barcode = barcode
+        this.laneId = laneId
+        this.amount = amount
+        this.entryTime = entryTime
+    }
+}
 
 @JacksonXmlRootElement(localName = "Result")
-data class OnDemandExitResponse(
-    @JacksonXmlProperty(localName = "Success")
-    val success: Boolean,
-    @JacksonXmlProperty(localName = "TransactionID")
-    val trasnactionId: Long,
-    @JacksonXmlProperty(localName = "Message")
-    val message: String? = null
-)
+class OnDemandExitResponse {
+    @field:JacksonXmlProperty(localName = "Success")
+    var success: Boolean
+    @field:JacksonXmlProperty(localName = "TransactionID")
+    var trasnactionId: Long?
+    @field:JacksonXmlProperty(localName = "Message")
+    var message: String?
+
+    @JvmOverloads
+    constructor(success: Boolean = true, transId: Long = 0) {
+        this.success = success
+        this.trasnactionId = transId
+        this.message = null
+    }
+
+    constructor(message: String) {
+        this.success = false
+        this.trasnactionId = null
+        this.message = message
+    }
+
+}
 
 class XmlConverter : ContentConverter {
     companion object {
         val log = KotlinLogging.logger(XmlConverter::class.java.simpleName)
-
-        val dateFormat = SimpleDateFormat("YYYY-MM-dd HH:mm:ss'Z'").apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-        val dateSerializer = DateSerializer.instance.withFormat(true, dateFormat)
-
-        val module = JacksonXmlModule().apply {
-            this.addSerializer(Date::class.java, dateSerializer)
-            DateDeserializers.DateDeserializer.instance
-            this.addDeserializer(
-                Date::class.java,
-                DateDeserializers.DateDeserializer(
-                    DateDeserializers.DateDeserializer.instance,
-                    dateFormat,
-                    dateFormat.toPattern()
-                )
-            )
+        const val DATE_FORMAT_PATTERN = "yyyy-MM-dd HH:mm:ss'Z'"
+        val objMapper = XmlMapper(JacksonXmlModule().apply {
             setDefaultUseWrapper(false)
-
-        }
-        val objMapper = XmlMapper(module).apply {
-            this.dateFormat = dateFormat
-            this.setTimeZone(TimeZone.getTimeZone("UTC"))
-        }
+        })
     }
 
     override suspend fun convertForReceive(context: PipelineContext<ApplicationReceiveRequest, ApplicationCall>): Any? {
