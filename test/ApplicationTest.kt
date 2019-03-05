@@ -1,18 +1,13 @@
 package com.spothero.lab
 
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.deser.std.DateDeserializers
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import com.spothero.lab.parkonect.api.OnDemandEntryRequest
-import com.spothero.lab.parkonect.api.OnDemandEntryResponse
-import com.spothero.lab.parkonect.api.XmlConverter
-import io.ktor.application.log
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.withTestApplication
-import java.util.*
+import parkonect.api.ParkonectXmlConverter
+import parkonect.api.model.OnDemandEntryRequest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -44,8 +39,7 @@ class ApplicationTest {
         val reqBody = objMapper.readValue(bodyText, OnDemandEntryRequest::class.java)
 
 
-
-        val outputText = XmlConverter.objMapper.writeValueAsString(reqBody)
+        val outputText = ParkonectXmlConverter.objMapper.writeValueAsString(reqBody)
         System.out.println("XML:\n$outputText")
         assertEquals(bodyText, outputText)
     }

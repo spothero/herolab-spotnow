@@ -1,8 +1,5 @@
 package com.spothero.lab
 
-import ch.qos.logback.core.util.ContentTypeUtil
-import com.spothero.lab.parkonect.api.OnDemandEntryRequest
-import com.spothero.lab.parkonect.api.XmlConverter
 import freemarker.cache.ClassTemplateLoader
 import io.ktor.application.Application
 import io.ktor.application.call
@@ -14,17 +11,18 @@ import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
 import io.ktor.freemarker.FreeMarker
 import io.ktor.freemarker.FreeMarkerContent
-import io.ktor.gson.gson
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
+import io.ktor.jackson.jackson
 import io.ktor.request.path
 import io.ktor.response.respond
 import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import org.slf4j.event.Level
+import parkonect.api.ParkonectXmlConverter
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -56,7 +54,9 @@ fun Application.module(testing: Boolean = false) {
 
     routing {
         install(ContentNegotiation) {
-            gson {
+            jackson {
+                // Configure Jackson's ObjectMapper here
+                register(ContentType.Application.Xml, ParkonectXmlConverter())
             }
         }
         get("/") {

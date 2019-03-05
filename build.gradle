@@ -47,7 +47,7 @@ dependencies {
     compile "io.ktor:ktor-client-okhttp:$ktor_version"
     compile "io.ktor:ktor-auth:$ktor_version"
     compile "io.ktor:ktor-client-auth-basic:$ktor_version"
-    compile "io.ktor:ktor-gson:$ktor_version"
+    compile "io.ktor:ktor-jackson:$ktor_version"
 
     compile 'io.reactivex.rxjava2:rxkotlin:2.3.0'
     testCompile "io.ktor:ktor-server-tests:$ktor_version"
