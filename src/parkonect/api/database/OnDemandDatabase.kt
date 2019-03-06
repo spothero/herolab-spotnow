@@ -56,19 +56,25 @@ class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
             }
 
             var activeTransactions =
-                OnDemandTransactions.innerJoin(OnDemandEntryTrans).innerJoin(OnDemandEvents).leftJoin(OnDemandExitTrans)
+                OnDemandTransactions.innerJoin(OnDemandEntryTrans).innerJoin(OnDemandEvents)
                     .slice(OnDemandTransactions.columns)
-                    .select { OnDemandEvents.barcodeHash eq barHash and OnDemandExitTrans.transaction.isNull() }
+                    .select { OnDemandEvents.barcodeHash eq barHash }
                     .distinct()
                     .map { OnDemandTransaction.wrapRow(it) }
+            var withExitTransactions = OnDemandTransactions.innerJoin(OnDemandExitTrans).innerJoin(OnDemandEvents)
+                .slice(OnDemandTransactions.columns)
+                .select { OnDemandEvents.barcodeHash eq barHash }
+                .distinct()
+                .map { OnDemandTransaction.wrapRow(it) }
+
+            activeTransactions.toMutableList()
+                .removeIf { activeTrans -> withExitTransactions.firstOrNull { itExit -> itExit.transactionId == activeTrans.transactionId } != null }
 
             val responseMessage = if (activeTransactions.isNotEmpty()) {
                 "There is already Entry transaction active for this barcode."
             } else {
                 OnDemandTransaction.new {
                     transactionId = UUID.randomUUID().toString()
-//                    entryRecord = SizedCollection(listOf(entryEvent))
-//                    exitRecord = EmptySizedIterable()
                     amount = null
                 }.apply {
                     entryRecord = SizedCollection(listOf(entryEvent))
@@ -98,12 +104,22 @@ class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
                     this.requestTime = requestTime
                 }
             }
+
             var activeTransactions =
-                OnDemandTransactions.innerJoin(OnDemandEntryTrans).innerJoin(OnDemandEvents).leftJoin(OnDemandExitTrans)
+                OnDemandTransactions.innerJoin(OnDemandEntryTrans).innerJoin(OnDemandEvents)
                     .slice(OnDemandTransactions.columns)
-                    .select { OnDemandEvents.barcodeHash eq barHash and OnDemandExitTrans.transaction.isNull() }
+                    .select { OnDemandEvents.barcodeHash eq barHash }
                     .distinct()
                     .map { OnDemandTransaction.wrapRow(it) }
+            var withExitTransactions = OnDemandTransactions.innerJoin(OnDemandExitTrans).innerJoin(OnDemandEvents)
+                .slice(OnDemandTransactions.columns)
+                .select { OnDemandEvents.barcodeHash eq barHash }
+                .distinct()
+                .map { OnDemandTransaction.wrapRow(it) }
+                .toList()
+
+            activeTransactions.toMutableList()
+                .removeIf { activeTrans -> withExitTransactions.contains(activeTrans) }
 
             var transId: String = ""
             var responseMessage: String? = if (activeTransactions.size > 1) {
@@ -111,12 +127,15 @@ class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
                 log.warn { "There is ${activeTransactions.size} active transactions for same hashCode" }
                 "Multiple Entries found for this barcode"
             } else {
-                activeTransactions.firstOrNull()?.let { activeTransaction ->
+                val activeTransaction = activeTransactions.firstOrNull()
+                if (activeTransaction != null) {
                     transId = activeTransaction.transactionId
                     activeTransaction.amount = request.amount
                     activeTransaction.exitRecord = SizedCollection(listOf(exitEvent))
                     null
-                } ?: "Active Entry transaction not found for this BarCode"
+                } else {
+                    "Active Entry transaction not found for this BarCode"
+                }
             }
             exitEvent.response.apply {
                 success = responseMessage == null
@@ -129,6 +148,7 @@ class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
     private fun <T> serializableTransaction(function: Transaction.() -> T): T {
         return transaction(Connection.TRANSACTION_SERIALIZABLE, 3, db, function)
     }
+
 }
 
 fun String.computeHash(): Long {
