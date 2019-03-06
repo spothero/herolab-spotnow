@@ -35,17 +35,17 @@ class DatabaseTest {
         assertNotNull(respEntry)
     }
 
-    @Test
-    fun testDoubleExit() {
-        var respEntry = db.recordEntry(OnDemandEntryRequest(10, "testBAR", 10))
-        assertNull(respEntry)
-        var respExit = db.recordExit(OnDemandExitRequest(10, "testBAR", 10, 19f))
-        assertNull(respExit.second)
-        assertNotNull(respExit.first)
-        assertNotNull(UUID.fromString(respExit.first))
-        respExit = db.recordExit(OnDemandExitRequest(10, "testBAR", 10, 19f))
-        println(respExit)
-        assertNotNull(respExit.second)
-        assertNotNull(UUID.fromString(respExit.first))
-    }
+//    @Test
+////    fun testDoubleExit() {
+////        var respEntry = db.recordEntry(OnDemandEntryRequest(10, "testBAR", 10))
+////        assertNull(respEntry)
+////        var respExit = db.recordExit(OnDemandExitRequest(10, "testBAR", 10, 19f))
+////        assertNull(respExit.second)
+////        assertNotNull(respExit.first)
+////        assertNotNull(UUID.fromString(respExit.first))
+////        respExit = db.recordExit(OnDemandExitRequest(10, "testBAR", 10, 19f))
+////        println(respExit)
+////        assertNotNull(respExit.second)
+////        assertNotNull(UUID.fromString(respExit.first))
+////    }
 }
