@@ -56,7 +56,10 @@ fun Application.module(testing: Boolean = false) {
         install(ContentNegotiation) {
             jackson {
                 // Configure Jackson's ObjectMapper here
-                register(ContentType.Application.Xml, ParkonectXmlConverter())
+                register(ContentType.Application.Xml, ParkonectXmlConverter()) {
+                    // todo check for xml serialization per type
+                }
+
             }
         }
         get("/") {

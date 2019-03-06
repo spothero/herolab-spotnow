@@ -1,10 +1,7 @@
 package com.spothero.lab.parkonect.api.database
 
 import mu.KotlinLogging
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import parkonect.api.model.OnDemandEntryRequest
@@ -13,7 +10,7 @@ import java.sql.Connection
 import java.util.*
 
 
-class OnDemandDatabase(val dbConnection: String = "jdbc:h2:file:~/spotnow.db.h2;DB_CLOSE_DELAY=-1") {
+class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1") {
 
     companion object {
         val log = KotlinLogging.logger(OnDemandDatabase::class.java.simpleName)
@@ -23,7 +20,13 @@ class OnDemandDatabase(val dbConnection: String = "jdbc:h2:file:~/spotnow.db.h2;
 
     init {
         db = Database.connect(dbConnection, pickDriver(dbConnection))
-        //SchemaUtils.createMissingTablesAndColumns()
+        serializableTransaction {
+            SchemaUtils.createMissingTablesAndColumns(OnDemandTransactions)
+            SchemaUtils.createMissingTablesAndColumns(OnDemandEvents)
+            SchemaUtils.createMissingTablesAndColumns(OnDemandResponses)
+            SchemaUtils.createMissingTablesAndColumns(OnDemandExitTrans)
+            SchemaUtils.createMissingTablesAndColumns(OnDemandEntryTrans)
+        }
     }
 
     private fun pickDriver(dbConnJdbc: String): String {
@@ -45,26 +48,36 @@ class OnDemandDatabase(val dbConnection: String = "jdbc:h2:file:~/spotnow.db.h2;
                 entryTime = DateTime(request.entryTime)
                 garageId = request.garageId
                 laneId = request.laneId
+                response = OnDemandResponse.new {
+                    success = false
+                    errorMessage = "Not completed"
+                    this.requestTime = requestTime
+                }
             }
 
-            var activeTransactions = OnDemandTransactions.innerJoin(OnDemandEvents).slice(OnDemandTransactions.columns)
-                .select {
-                    OnDemandEvents.id eq OnDemandTransactions.entryRecord and OnDemandEvents.barcodeHash.eq(barHash) and OnDemandTransactions.exitRecord.isNull()
-                }.withDistinct().map { OnDemandTransaction.wrapRow(it) }
+            var activeTransactions =
+                OnDemandTransactions.innerJoin(OnDemandEntryTrans).innerJoin(OnDemandEvents).leftJoin(OnDemandExitTrans)
+                    .slice(OnDemandTransactions.columns)
+                    .select { OnDemandEvents.barcodeHash eq barHash and OnDemandExitTrans.transaction.isNull() }
+                    .distinct()
+                    .map { OnDemandTransaction.wrapRow(it) }
 
             val responseMessage = if (activeTransactions.isNotEmpty()) {
                 "There is already Entry transaction active for this barcode."
             } else {
                 OnDemandTransaction.new {
                     transactionId = UUID.randomUUID().toString()
-                    entryRecord = entryEvent
+//                    entryRecord = SizedCollection(listOf(entryEvent))
+//                    exitRecord = EmptySizedIterable()
+                    amount = null
+                }.apply {
+                    entryRecord = SizedCollection(listOf(entryEvent))
                 }
                 null
             }
-            entryEvent.response = OnDemandResponse.new {
+            entryEvent.response.apply {
                 success = responseMessage == null
                 errorMessage = responseMessage
-                this.requestTime = requestTime
                 responseTime = DateTime.now()
             }
             return@serializableTransaction responseMessage
@@ -79,11 +92,19 @@ class OnDemandDatabase(val dbConnection: String = "jdbc:h2:file:~/spotnow.db.h2;
                 entryTime = DateTime(request.entryTime)
                 garageId = request.garageId
                 laneId = request.laneId
+                response = OnDemandResponse.new {
+                    success = false
+                    errorMessage = "Not completed"
+                    this.requestTime = requestTime
+                }
             }
-            var activeTransactions = OnDemandTransactions.innerJoin(OnDemandEvents).slice(OnDemandTransactions.columns)
-                .select {
-                    OnDemandEvents.id eq OnDemandTransactions.entryRecord and OnDemandEvents.barcodeHash.eq(barHash) and OnDemandTransactions.exitRecord.isNull()
-                }.withDistinct().map { OnDemandTransaction.wrapRow(it) }
+            var activeTransactions =
+                OnDemandTransactions.innerJoin(OnDemandEntryTrans).innerJoin(OnDemandEvents).leftJoin(OnDemandExitTrans)
+                    .slice(OnDemandTransactions.columns)
+                    .select { OnDemandEvents.barcodeHash eq barHash and OnDemandExitTrans.transaction.isNull() }
+                    .distinct()
+                    .map { OnDemandTransaction.wrapRow(it) }
+
             var transId: String = ""
             var responseMessage: String? = if (activeTransactions.size > 1) {
                 // this should not happen
@@ -93,14 +114,13 @@ class OnDemandDatabase(val dbConnection: String = "jdbc:h2:file:~/spotnow.db.h2;
                 activeTransactions.firstOrNull()?.let { activeTransaction ->
                     transId = activeTransaction.transactionId
                     activeTransaction.amount = request.amount
-                    activeTransaction.exitRecord = exitEvent
+                    activeTransaction.exitRecord = SizedCollection(listOf(exitEvent))
                     null
                 } ?: "Active Entry transaction not found for this BarCode"
             }
-            exitEvent.response = OnDemandResponse.new {
+            exitEvent.response.apply {
                 success = responseMessage == null
                 errorMessage = responseMessage
-                this.requestTime = requestTime
                 responseTime = DateTime.now()
             }
             return@serializableTransaction Pair(transId, responseMessage)

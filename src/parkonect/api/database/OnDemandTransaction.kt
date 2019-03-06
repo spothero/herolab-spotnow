@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.LongIdTable
+import org.jetbrains.exposed.sql.Table
 
 /**
  * On demand transaction with entry and exit details and its statuses.
@@ -13,15 +14,23 @@ class OnDemandTransaction(id: EntityID<Long>) : LongEntity(id) {
 
     var transactionId by OnDemandTransactions.transactionId
     var amount by OnDemandTransactions.amount
-    var entryRecord by OnDemandEvent referencedOn OnDemandTransactions.entryRecord
-    var exitRecord by OnDemandEvent optionalReferencedOn OnDemandTransactions.exitRecord
+    var entryRecord by OnDemandEvent via OnDemandEntryTrans
+    var exitRecord by OnDemandEvent via OnDemandExitTrans
+}
+
+object OnDemandExitTrans : Table() {
+    val transaction = reference("transaction", OnDemandTransactions).primaryKey(0)
+    val event = reference("event", OnDemandEvents).primaryKey(1)
+}
+
+object OnDemandEntryTrans : Table() {
+    val transaction = reference("transaction", OnDemandTransactions).primaryKey(0)
+    val event = reference("event", OnDemandEvents).primaryKey(1)
 }
 
 object OnDemandTransactions : LongIdTable() {
     val transactionId = varchar("transaction_id", 100)
     val amount = float("amount").nullable()
-    val entryRecord = reference("entry_id", OnDemandEvents)
-    val exitRecord = reference("exit_id", OnDemandEvents).nullable()
 }
 
 /**
@@ -62,6 +71,6 @@ class OnDemandResponse(id: EntityID<Long>) : LongEntity(id) {
 object OnDemandResponses : LongIdTable() {
     val success = bool("success").nullable()
     val errorMessage = varchar("error_message", 250).nullable()
-    val responseTime = datetime("response_time")
+    val responseTime = datetime("response_time").nullable()
     val requestTime = datetime("request_time")
 }

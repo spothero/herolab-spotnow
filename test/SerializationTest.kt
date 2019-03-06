@@ -31,7 +31,7 @@ class SerializationTest {
         assert(xmlString.contains("<ActualEntryTime>2017-02-05 13:15:10Z</ActualEntryTime>", false))
 
         var requestB = ParkonectXmlConverter.objMapper.readValue(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n$xmlString",
+            xmlString,
             OnDemandEntryRequest::class.java
         )
 
@@ -108,7 +108,7 @@ class SerializationTest {
 
     @Test
     fun testExitResponseSerialization() {
-        val transID = 3423423423434L
+        val transID = "489efb90-84cb-496f-be82-161c416b968f"
 
         var response = OnDemandExitResponse(true, transID)
         var xmlString = ParkonectXmlConverter.objMapper.writeValueAsString(response)
@@ -116,14 +116,14 @@ class SerializationTest {
 
         assert(xmlString.contains("<Result>", false))
         assert(xmlString.contains("<Success>true</Success>", false))
-        assert(xmlString.contains("<TransactionID>3423423423434</TransactionID>", false))
+        assert(xmlString.contains("<TransactionID>489efb90-84cb-496f-be82-161c416b968f</TransactionID>", false))
 
         var responseB = ParkonectXmlConverter.objMapper.readValue(xmlString, OnDemandExitResponse::class.java)
         assertEquals(response.success, responseB.success)
         assertEquals(response.trasnactionId, responseB.trasnactionId)
         assertNull(response.message)
 
-        response = OnDemandExitResponse("Some error message")
+        response = OnDemandExitResponse(false, null, "Some error message")
         xmlString = ParkonectXmlConverter.objMapper.writeValueAsString(response)
         println(xmlString)
 
