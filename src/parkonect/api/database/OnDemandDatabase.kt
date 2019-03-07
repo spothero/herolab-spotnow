@@ -104,22 +104,23 @@ class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
                     this.requestTime = requestTime
                 }
             }
-
-            var activeTransactions =
-                OnDemandTransactions.innerJoin(OnDemandEntryTrans).innerJoin(OnDemandEvents)
-                    .slice(OnDemandTransactions.columns)
-                    .select { OnDemandEvents.barcodeHash eq barHash }
-                    .distinct()
-                    .map { OnDemandTransaction.wrapRow(it) }
             var withExitTransactions = OnDemandTransactions.innerJoin(OnDemandExitTrans).innerJoin(OnDemandEvents)
                 .slice(OnDemandTransactions.columns)
                 .select { OnDemandEvents.barcodeHash eq barHash }
                 .distinct()
-                .map { OnDemandTransaction.wrapRow(it) }
+                .map { OnDemandTransaction.wrapRow(it).transactionId }
                 .toList()
 
-            activeTransactions.toMutableList()
-                .removeIf { activeTrans -> withExitTransactions.contains(activeTrans) }
+            var activeTransactions =
+                OnDemandTransactions.innerJoin(OnDemandEntryTrans).innerJoin(OnDemandEvents)
+                    .slice(OnDemandTransactions.columns)
+                    .select {
+                        OnDemandEvents.barcodeHash eq barHash and OnDemandTransactions.transactionId.notInList(
+                            withExitTransactions
+                        )
+                    }
+                    .distinct()
+                    .map { OnDemandTransaction.wrapRow(it) }
 
             var transId: String = ""
             var responseMessage: String? = if (activeTransactions.size > 1) {
@@ -134,6 +135,7 @@ class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
                     activeTransaction.exitRecord = SizedCollection(listOf(exitEvent))
                     null
                 } else {
+                    transId = withExitTransactions.first()
                     "Active Entry transaction not found for this BarCode"
                 }
             }
