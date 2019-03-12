@@ -28,7 +28,7 @@ fun Application.module(testing: Boolean = false) {
     routing {
 
         authenticate("apiAuth") {
-            route("/api/com.spothero.lab.spotnow.api.parkonect") {
+            route("/api/parkonect") {
                 get {
                     call.respond(HttpStatusCode.OK)
                 }

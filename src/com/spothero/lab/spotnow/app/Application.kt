@@ -1,10 +1,7 @@
-package com.spothero.lab
+package com.spothero.lab.spotnow.app
 
 import com.github.ajalt.clikt.core.subcommands
 import com.spothero.lab.spotnow.api.parkonect.ParkonectXmlConverter
-import com.spothero.lab.spotnow.app.H2DbCommand
-import com.spothero.lab.spotnow.app.OnDemandCommmand
-import com.spothero.lab.spotnow.app.PostgreDbCommand
 import com.spothero.lab.spotnow.di.databaseModule
 import com.spothero.lab.spotnow.di.repositoryModule
 import com.spothero.lab.spotnow.di.serviceModule

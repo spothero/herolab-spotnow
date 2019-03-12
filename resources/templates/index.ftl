@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="data" type="com.spothero.lab.IndexData" -->
+<#-- @ftlvariable name="data" type="com.spothero.lab.spotnow.app.IndexData" -->
 <html>
 <body>
 <ul>
