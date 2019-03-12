@@ -2,6 +2,8 @@ package com.spothero.lab.spotnow.api.parkonect.database
 
 import com.spothero.lab.spotnow.api.parkonect.model.OnDemandEntryRequest
 import com.spothero.lab.spotnow.api.parkonect.model.OnDemandExitRequest
+import com.spothero.lab.spotnow.api.parkonect.model.TransactionDetail
+import com.spothero.lab.spotnow.api.parkonect.model.TransactionEvent
 import com.spothero.lab.spotnow.database.BaseRepository
 import mu.KLogger
 import mu.KotlinLogging
@@ -137,6 +139,22 @@ class OnDemandRepository(database: Database) : BaseRepository(database) {
             }
             return@runTransaction Pair(transId, responseMessage)
         }
+
+    fun topNTransactions(limit: Int): List<TransactionDetail> = runTransaction {
+        return@runTransaction OnDemandTransactions.innerJoin(OnDemandEntryTrans).innerJoin(OnDemandEvents).selectAll()
+            .orderBy(OnDemandEvents.entryTime, isAsc = false)
+            .limit(limit)
+            .distinct()
+            .asSequence()
+            .map { OnDemandTransaction.wrapRow(it) }
+            .map { trans ->
+                TransactionDetail(
+                    trans.transactionId, trans.entryRecord.first().barcode, trans.amount,
+                    trans.entryRecord.first().let { TransactionEvent.fromEvent(it) },
+                    trans.exitRecord.firstOrNull()?.let { TransactionEvent.fromEvent(it) }
+                )
+            }.toList()
+    }
 
 }
 

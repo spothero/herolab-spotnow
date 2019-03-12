@@ -11,13 +11,15 @@ import io.ktor.request.ApplicationReceiveRequest
 import io.ktor.util.pipeline.PipelineContext
 import kotlinx.coroutines.io.ByteReadChannel
 import kotlinx.coroutines.io.readRemaining
+import java.text.SimpleDateFormat
 
 class ParkonectXmlConverter : ContentConverter {
     companion object {
-        const val DATE_FORMAT_PATTERN = "yyyy-MM-dd HH:mm:ss'Z'"
+
         val objMapper = XmlMapper(JacksonXmlModule().apply {
             setDefaultUseWrapper(false)
         }).apply {
+            dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true)
         }
     }

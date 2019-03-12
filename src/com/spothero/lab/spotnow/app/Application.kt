@@ -28,6 +28,7 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import org.koin.standalone.StandAloneContext.startKoin
 import org.slf4j.event.Level
+import java.text.SimpleDateFormat
 
 fun main(args: Array<String>): Unit {
     val onDemandEnabled = OnDemandCommmand().apply {
@@ -49,7 +50,7 @@ fun Application.module(testing: Boolean = false) {
     install(AutoHeadResponse)
 
     install(CallLogging) {
-        level = Level.INFO
+        level = Level.DEBUG
         filter { call -> call.request.path().startsWith("/") }
     }
 
@@ -68,11 +69,11 @@ fun Application.module(testing: Boolean = false) {
     routing {
         install(ContentNegotiation) {
             jackson {
+                dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                 // Configure Jackson's ObjectMapper here
                 register(ContentType.Application.Xml, ParkonectXmlConverter()) {
-                    // todo check for xml serialization per type
+                    // todo check for xml serialization per type - issue https://github.com/ktorio/ktor/issues/1002
                 }
-
             }
         }
         get("/") {

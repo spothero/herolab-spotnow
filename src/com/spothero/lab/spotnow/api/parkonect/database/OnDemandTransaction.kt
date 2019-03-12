@@ -51,7 +51,7 @@ object OnDemandEvents : LongIdTable() {
     val barcodeHash = long("bar_code_hash")
     val barcode = text("bar_code")
     val garageId = integer("garage_id").index()
-    val laneId = integer("lane_id").nullable()
+    val laneId = integer("lane_id")
     val entryTime = datetime("entry_time").index()
     val response = reference("response_id", OnDemandResponses)
 }
