@@ -1,13 +1,13 @@
 package com.spothero.lab
 
+import com.spothero.lab.spotnow.api.parkonect.ParkonectXmlConverter
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandEntryRequest
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandEntryResponse
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandExitRequest
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandExitResponse
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.junit.Test
-import parkonect.api.ParkonectXmlConverter
-import parkonect.api.model.OnDemandEntryRequest
-import parkonect.api.model.OnDemandEntryResponse
-import parkonect.api.model.OnDemandExitRequest
-import parkonect.api.model.OnDemandExitResponse
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 

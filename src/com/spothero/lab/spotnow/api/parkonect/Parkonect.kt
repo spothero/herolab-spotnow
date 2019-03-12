@@ -1,6 +1,10 @@
-package com.spothero.lab.parkonect.api
+package com.spothero.lab.spotnow.api.parkonect
 
-import com.spothero.lab.parkonect.api.database.OnDemandDatabase
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandEntryRequest
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandEntryResponse
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandExitRequest
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandExitResponse
+import com.spothero.lab.spotnow.api.parkonect.service.OnDemandService
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.log
@@ -12,20 +16,19 @@ import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.routing.routing
-import parkonect.api.model.OnDemandEntryRequest
-import parkonect.api.model.OnDemandEntryResponse
-import parkonect.api.model.OnDemandExitRequest
-import parkonect.api.model.OnDemandExitResponse
+import org.koin.ktor.ext.inject
 
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
 
+    val onDemandService: OnDemandService by inject()
+
     routing {
 
         authenticate("apiAuth") {
-            route("/api/parkonect") {
+            route("/api/com.spothero.lab.spotnow.api.parkonect") {
                 get {
                     call.respond(HttpStatusCode.OK)
                 }
@@ -33,7 +36,7 @@ fun Application.module(testing: Boolean = false) {
                     log.info(call.request.headers.toString())
                     var entryRequest = call.receive<OnDemandEntryRequest>()
                     log.info("Received $entryRequest")
-                    var errorMessage = OnDemandDatabase().recordEntry(entryRequest)
+                    var errorMessage = onDemandService.recordEntry(entryRequest)
 
                     val respBody = OnDemandEntryResponse(errorMessage)
                     call.respond(respBody)
@@ -41,7 +44,7 @@ fun Application.module(testing: Boolean = false) {
                 post("exit") {
                     val reqBody = call.receive<OnDemandExitRequest>()
                     log.info("Parsed body: $reqBody")
-                    var respPair = OnDemandDatabase().recordExit(reqBody)
+                    var respPair = onDemandService.recordExit(reqBody)
                     var respBody = if (respPair.second == null) {
                         OnDemandExitResponse(true, respPair.first)
                     } else {

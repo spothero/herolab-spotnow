@@ -1,26 +1,26 @@
 package com.spothero.lab.parkonect.api.database
 
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandEntryRequest
+import com.spothero.lab.spotnow.api.parkonect.model.OnDemandExitRequest
+import com.spothero.lab.spotnow.database.BaseRepository
+import mu.KLogger
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
-import parkonect.api.model.OnDemandEntryRequest
-import parkonect.api.model.OnDemandExitRequest
-import java.sql.Connection
 import java.util.*
 
 
-class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1") {
+class OnDemandRepository(database: Database) : BaseRepository(database) {
 
     companion object {
-        val log = KotlinLogging.logger(OnDemandDatabase::class.java.simpleName)
+        private val logStatic = KotlinLogging.logger(OnDemandRepository::class.java.simpleName)
     }
 
-    private val db: Database
+    override val log: KLogger
+        get() = logStatic
 
-    init {
-        db = Database.connect(dbConnection, pickDriver(dbConnection))
-        serializableTransaction {
+    override fun initDb() {
+        runTransaction {
             SchemaUtils.createMissingTablesAndColumns(OnDemandTransactions)
             SchemaUtils.createMissingTablesAndColumns(OnDemandEvents)
             SchemaUtils.createMissingTablesAndColumns(OnDemandResponses)
@@ -29,17 +29,8 @@ class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
         }
     }
 
-    private fun pickDriver(dbConnJdbc: String): String {
-        if (dbConnJdbc.startsWith("jdbc:postgresql")) {
-            return "org.postgresql.Driver"
-        } else { //default
-            return "org.h2.Driver"
-        }
-    }
-
-
     fun recordEntry(request: OnDemandEntryRequest, requestTime: DateTime = DateTime.now()): String? =
-        serializableTransaction {
+        runTransaction {
             var barHash = request.barcode.computeHash()
 
             var entryEvent = OnDemandEvent.new {
@@ -86,11 +77,11 @@ class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
                 errorMessage = responseMessage
                 responseTime = DateTime.now()
             }
-            return@serializableTransaction responseMessage
+            return@runTransaction responseMessage
         }
 
     fun recordExit(request: OnDemandExitRequest, requestTime: DateTime = DateTime.now()): Pair<String, String?> =
-        serializableTransaction {
+        runTransaction {
             var barHash = request.barcode.computeHash()
             var exitEvent = OnDemandEvent.new {
                 barcodeHash = barHash
@@ -144,12 +135,8 @@ class OnDemandDatabase(dbConnection: String = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1
                 errorMessage = responseMessage
                 responseTime = DateTime.now()
             }
-            return@serializableTransaction Pair(transId, responseMessage)
+            return@runTransaction Pair(transId, responseMessage)
         }
-
-    private fun <T> serializableTransaction(function: Transaction.() -> T): T {
-        return transaction(Connection.TRANSACTION_SERIALIZABLE, 3, db, function)
-    }
 
 }
 

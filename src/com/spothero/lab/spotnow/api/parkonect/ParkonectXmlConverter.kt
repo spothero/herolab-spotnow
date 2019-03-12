@@ -1,4 +1,4 @@
-package parkonect.api
+package com.spothero.lab.spotnow.api.parkonect
 
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule
 import com.fasterxml.jackson.dataformat.xml.XmlMapper

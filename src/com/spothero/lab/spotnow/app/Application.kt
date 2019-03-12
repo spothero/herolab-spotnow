@@ -1,5 +1,13 @@
 package com.spothero.lab
 
+import com.github.ajalt.clikt.core.subcommands
+import com.spothero.lab.spotnow.api.parkonect.ParkonectXmlConverter
+import com.spothero.lab.spotnow.app.H2DbCommand
+import com.spothero.lab.spotnow.app.OnDemandCommmand
+import com.spothero.lab.spotnow.app.PostgreDbCommand
+import com.spothero.lab.spotnow.di.databaseModule
+import com.spothero.lab.spotnow.di.repositoryModule
+import com.spothero.lab.spotnow.di.serviceModule
 import freemarker.cache.ClassTemplateLoader
 import io.ktor.application.Application
 import io.ktor.application.call
@@ -21,10 +29,18 @@ import io.ktor.response.respond
 import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.routing
+import org.koin.standalone.StandAloneContext.startKoin
 import org.slf4j.event.Level
-import parkonect.api.ParkonectXmlConverter
 
-fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+fun main(args: Array<String>): Unit {
+    val onDemandEnabled = OnDemandCommmand().apply {
+        this.subcommands(PostgreDbCommand(), H2DbCommand())
+        this.main(args)
+    }.let { it.enable != "false" }
+    startKoin(listOf(databaseModule, repositoryModule, serviceModule))
+    // todo figure out how to enable ktor module or disable
+    io.ktor.server.netty.EngineMain.main(args)
+}
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads

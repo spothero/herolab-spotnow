@@ -1,4 +1,4 @@
-package parkonect.api.model
+package com.spothero.lab.spotnow.api.parkonect.model
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
