@@ -1,4 +1,4 @@
-package com.spothero.lab.parkonect.api.database
+package com.spothero.lab.spotnow.api.parkonect.database
 
 import com.spothero.lab.spotnow.api.parkonect.model.OnDemandEntryRequest
 import com.spothero.lab.spotnow.api.parkonect.model.OnDemandExitRequest

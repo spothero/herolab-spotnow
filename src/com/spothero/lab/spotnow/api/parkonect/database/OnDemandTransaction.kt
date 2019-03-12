@@ -1,4 +1,4 @@
-package com.spothero.lab.parkonect.api.database
+package com.spothero.lab.spotnow.api.parkonect.database
 
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.LongEntity

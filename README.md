@@ -2,4 +2,4 @@
 
 SpotNow server and API
 
-Based in Ktor framework with Db access via Exposed
+Based in Ktor frame work with Db access via Exposed

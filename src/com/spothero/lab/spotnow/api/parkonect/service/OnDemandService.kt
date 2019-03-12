@@ -1,6 +1,6 @@
 package com.spothero.lab.spotnow.api.parkonect.service
 
-import com.spothero.lab.parkonect.api.database.OnDemandRepository
+import com.spothero.lab.spotnow.api.parkonect.database.OnDemandRepository
 import com.spothero.lab.spotnow.api.parkonect.model.OnDemandEntryRequest
 import com.spothero.lab.spotnow.api.parkonect.model.OnDemandExitRequest
 import org.joda.time.DateTime
