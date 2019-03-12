@@ -68,12 +68,12 @@ fun Application.module(testing: Boolean = false) {
 
     routing {
         install(ContentNegotiation) {
-            jackson {
-                dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                // Configure Jackson's ObjectMapper here
-                register(ContentType.Application.Xml, ParkonectXmlConverter()) {
-                    // todo check for xml serialization per type - issue https://github.com/ktorio/ktor/issues/1002
-                }
+            jackson(ContentType.Application.Json) {
+                // default content
+                dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'")
+            }
+            register(ContentType.Application.Xml, ParkonectXmlConverter()) {
+                // todo check for xml serialization per type - issue https://github.com/ktorio/ktor/issues/1002
             }
         }
         get("/") {

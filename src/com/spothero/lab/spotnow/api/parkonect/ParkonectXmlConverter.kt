@@ -19,7 +19,7 @@ class ParkonectXmlConverter : ContentConverter {
         val objMapper = XmlMapper(JacksonXmlModule().apply {
             setDefaultUseWrapper(false)
         }).apply {
-            dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+            dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'")
             configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true)
         }
     }

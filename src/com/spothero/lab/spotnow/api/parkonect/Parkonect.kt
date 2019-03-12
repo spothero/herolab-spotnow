@@ -60,10 +60,9 @@ fun Application.module(testing: Boolean = false) {
                 // list last 20 transactions
                 val limit: Int = call.parameters["limit"]?.toIntOrNull() ?: 20
                 val transList = onDemandService.listTransactions(limit)
-
                 call.respond(transList)// todo json response per route?
-
             }
         }
+
     }
 }
