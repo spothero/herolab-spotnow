@@ -52,7 +52,7 @@ fun Application.module(testing: Boolean = false) {
                         OnDemandExitResponse(true, respPair.first)
                     } else {
                         OnDemandExitResponse(false, null, respPair.second)
-                    }`
+                    }
                     call.respond(respBody)
                 }
             }
