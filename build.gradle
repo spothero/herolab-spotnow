@@ -16,7 +16,7 @@ apply plugin: 'java'
 
 group 'spotnow'
 version '0.0.1'
-mainClassName = "com.spothero.lab.ApplicationKt"
+mainClassName = "com.spothero.lab.spotnow.app.ApplicationKt"
 
 sourceSets {
     main.kotlin.srcDirs = main.java.srcDirs = ['src']

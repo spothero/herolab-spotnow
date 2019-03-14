@@ -1,5 +1,6 @@
 package com.spothero.lab.spotnow.di
 
+import com.google.gson.Gson
 import com.spothero.lab.spotnow.api.parkonect.database.OnDemandRepository
 import com.spothero.lab.spotnow.api.parkonect.service.OnDemandService
 import org.koin.dsl.module.Module
@@ -13,4 +14,5 @@ val repositoryModule = module {
 
 val serviceModule = module {
     single { OnDemandService() }
+    single { Gson() }
 }
