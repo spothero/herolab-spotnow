@@ -10,11 +10,9 @@ import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.log
 import io.ktor.auth.authenticate
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
 import io.ktor.response.respond
-import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
@@ -64,7 +62,9 @@ fun Application.module(testing: Boolean = false) {
                 // list last 20 transactions
                 val limit: Int = call.parameters["limit"]?.toIntOrNull() ?: 20
                 val transList = onDemandService.listTransactions(limit)
-                call.respondText(gson.toJson(transList), ContentType.Application.Json)
+                call.respond(transList)
+                // we only use gson here because Accept type header is not provided
+                //call.respondText(gson.toJson(transList), ContentType.Application.Json)
             }
         }
 
