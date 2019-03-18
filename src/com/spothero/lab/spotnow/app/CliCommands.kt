@@ -22,7 +22,7 @@ class PostgreDbCommand : CliktCommand(help = "Postress repository setup", name =
         if (dbAddress != null && dbUsername != null && dbPassword != null) {
             databaseModule = module {
                 single {
-                    BaseRepository.postgreSql(dbAddress!!, "lab_quuppa")?.let { (dbUrl, driver) ->
+                    BaseRepository.postgreSql(dbAddress!!, "lab_spotnow")?.let { (dbUrl, driver) ->
                         Database.connect(dbUrl, driver, dbUsername!!, dbPassword!!)
                     }
                 }

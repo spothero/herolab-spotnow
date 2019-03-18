@@ -23,6 +23,7 @@ class OnDemandRepository(database: Database) : BaseRepository(database) {
 
     override fun initDb() {
         runTransaction {
+
             SchemaUtils.createMissingTablesAndColumns(OnDemandTransactions)
             SchemaUtils.createMissingTablesAndColumns(OnDemandEvents)
             SchemaUtils.createMissingTablesAndColumns(OnDemandResponses)
